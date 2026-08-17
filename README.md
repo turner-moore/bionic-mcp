@@ -10,22 +10,19 @@
 
 ## Install
 
+### Claude Code (copy-paste)
+
+Paste this into your terminal. It clones, installs, and registers the MCP in one shot:
+
 ```sh
-git clone https://github.com/turner-moore/bionic-mcp.git
-cd bionic-mcp
-npm install
+git clone https://github.com/turner-moore/bionic-mcp.git && cd bionic-mcp && npm install && \
+claude mcp add -s user bionic -- node "$(pwd)/index.js"
 ```
 
-You also need [LM Studio](https://lmstudio.ai) with its local server running on `:1234`:
+You also need [LM Studio](https://lmstudio.ai) running its local server (that's where the models are):
 
 ```sh
 ~/.lmstudio/bin/lms server start
-```
-
-### Register with Claude Code
-
-```sh
-claude mcp add -s user bionic -- node "$(pwd)/index.js"
 ```
 
 ### Register with any other MCP client
