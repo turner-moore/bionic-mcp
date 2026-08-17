@@ -1,0 +1,12 @@
+{
+  "name": "bionic-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP server exposing local LM Studio (Bionic) models on :1234 as typed tools",
+  "type": "module",
+  "bin": { "bionic-mcp": "index.js" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.24.0"
+  }
+}

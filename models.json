@@ -1,0 +1,63 @@
+{
+  "_comment": "Capability card for the local LM Studio (Bionic) models. quality is /10 on a graded probe; tok_s measured in isolation with nothing else resident. Update this file when the installed models change.",
+  "default_model": "gemma-4-e4b-it-mlx",
+  "volume_model": "qwen/qwen3.5-4b",
+  "models": {
+    "qwen/qwen3.5-4b": {
+      "role": "Volume workhorse: classify/extract/summarize batches, second opinions, long docs to ~55K tokens",
+      "quality": 8,
+      "tok_s": 48,
+      "ctx_loaded": "~62K",
+      "auto_route": true,
+      "thinking_default": true,
+      "notes": "3x faster than anything else here. The remember shim's primary. Thinks by default; server needs reasoning_effort:'none' for direct answers (this server handles that)."
+    },
+    "gemma-4-e4b-it-mlx": {
+      "role": "General default: best quality-per-second, syntax checks, refactors, test generation, multilingual, vision",
+      "quality": 10,
+      "tok_s": 28.5,
+      "ctx_loaded": "131K max",
+      "auto_route": true,
+      "vision": true,
+      "notes": "Best all-rounder measured (10/10). Vision score 4/6, fastest of the tied-top models, but nothing local reads worksheets reliably; route documents to ocr-doc first. Rejects reasoning_effort with HTTP 400 (this server only sends that field to qwen-arch models)."
+    },
+    "mistralai_ministral-3-14b-instruct-2512-mlx": {
+      "role": "Max capability that fits: hard problems and reasoning the smaller models keep getting wrong",
+      "quality": 10,
+      "tok_s": 19.3,
+      "ctx_loaded": "262K max",
+      "auto_route": true,
+      "notes": "14B at MXFP4 (7.19GB). One of only two installed models to solve the multi-step reasoning probe. A third of e4b's speed; use when e4b is not enough."
+    },
+    "qwythos-9b-claude-mythos-5-1m": {
+      "role": "Long context only: the sole local option past ~62K real tokens (~144K loaded)",
+      "quality": 9,
+      "tok_s": 19.3,
+      "ctx_loaded": "~144K",
+      "auto_route": true,
+      "thinking_default": true,
+      "vision": true,
+      "notes": "qwen3.5 arch GGUF. The 'Claude Mythos 5 distill' claim in its name is unverified third-party marketing; treat it as a good qwen fine-tune, nothing more."
+    },
+    "supergemma4-e4b-abliterated-mlx": {
+      "role": "Uncensored variant; invoke explicitly, never auto-route",
+      "quality": 7,
+      "tok_s": 41.1,
+      "auto_route": false,
+      "text_only": true,
+      "notes": "TEXT-ONLY: abliteration removed the vision tower, so the server 400s on image inputs. Invoke by exact id; never auto-route."
+    },
+    "text-embedding-nomic-embed-text-v1.5": {
+      "role": "Embeddings only, not a chat model",
+      "auto_route": false,
+      "notes": "claude-find embeddings run elsewhere (llama-server + shim on :11434), not through this."
+    }
+  },
+  "routing_notes": [
+    "One chat model resident at a time on this 16GB machine; a load evicts the previous model. model:'auto' prefers the already-loaded model to avoid an 8-30s cold load.",
+    "Check Apple FM (Tier 0, apple-fm MCP) first for short classify/extract/summary tasks under ~3800 tokens: it is free with zero cold-load.",
+    "Keep on the hosted model (do NOT delegate here): anything needing session context, files, or memory, and multi-tool orchestration.",
+    "Delegation contract: prompts must be fully self-contained. The local model cannot see the Claude session, files, or memory; paste every input and constraint into the prompt.",
+    "LM Studio silently substitutes unknown model ids with whatever is loaded. This server refuses unknown ids client-side and verifies response.model on every call."
+  ]
+}

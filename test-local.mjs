@@ -1,0 +1,12 @@
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+const t = new StdioClientTransport({ command: "node", args: [new URL("./local.js", import.meta.url).pathname] });
+const c = new Client({ name: "test", version: "1.0.0" });
+await c.connect(t);
+console.log("=== tools ===", (await c.listTools()).tools.map(x=>x.name));
+console.log("\n=== models ===");
+console.log((await c.callTool({ name: "models", arguments: {} })).content[0].text);
+console.log("\n=== respond model:auto (expect caix 3B) ===");
+const r = await c.callTool({ name: "respond", arguments: { prompt: "Reply with exactly the word: OK", model: "auto", max_tokens: 10 } });
+console.log(r.content[0].text);
+await c.close(); process.exit(0);
