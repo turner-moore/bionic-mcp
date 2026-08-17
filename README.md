@@ -1,12 +1,19 @@
 # bionic-mcp
 
-**Turn the models you run in [LM Studio](https://lmstudio.ai) into tools any MCP client can call.** Prompts go to a model on your own machine. Free, local, private, nothing leaves the box.
+You run models in [LM Studio](https://lmstudio.ai). `bionic-mcp` turns them into tools Claude Code (or any MCP client) can call, so you can hand the cheap and bulky work to your own machine instead of a paid model. It's free, local, and private: the prompt and the answer never leave your Mac.
 
-## Why you'd want it
+## Why not just point the client at LM Studio's API
 
-- **Free local inference** — offload the cheap, bulky, or repetitive work to a model you already run.
-- **Private** — the prompt and the answer stay on your Mac.
-- **Typed and safe** — the server refuses unknown model ids instead of letting LM Studio silently swap in whatever happens to be loaded.
+You can, and two things will eventually bite you. This server fixes both:
+
+- **LM Studio silently swaps models.** Ask for a model that isn't loaded and its API quietly answers with whatever *is* loaded, so you think you're talking to a 14B and you're actually talking to a 3B. This server refuses an unknown model id up front and checks `response.model` on every reply, so you always know what answered.
+- **Cold loads are slow.** On 16GB only one model stays resident, and switching costs 8-30 seconds. `model:"auto"` uses whatever's already loaded instead of forcing a reload, so a quick call stays quick.
+
+That's the whole pitch: safe access to the models you already run, without the two foot-guns.
+
+## Where it fits your flow
+
+You're in Claude Code and hit a subtask that doesn't need the expensive model: classify these, summarize that, second-opinion this, extract fields from a batch. Hand it to `respond` and it runs on your hardware for free. `models` shows you what's installed and loaded so you can pick, or let `auto` decide.
 
 ## Install
 
@@ -19,15 +26,15 @@ git clone https://github.com/turner-moore/bionic-mcp.git && cd bionic-mcp && npm
 claude mcp add -s user bionic -- node "$(pwd)/index.js"
 ```
 
-You also need [LM Studio](https://lmstudio.ai) running its local server (that's where the models are):
+You also need LM Studio running its local server (that's where the models are):
 
 ```sh
 ~/.lmstudio/bin/lms server start
 ```
 
-### Register with any other MCP client
+### Any other MCP client
 
-Add this to your client's config (e.g. `claude_desktop_config.json`), using an absolute path:
+Add this to your client's config (e.g. `claude_desktop_config.json`) with an absolute path:
 
 ```json
 {
@@ -40,31 +47,23 @@ Add this to your client's config (e.g. `claude_desktop_config.json`), using an a
 }
 ```
 
-Point it at a different endpoint with the `BIONIC_BASE_URL` env var (default `http://127.0.0.1:1234`).
-
-## Use
-
-`respond` runs a prompt; `models` lists what's installed and loaded. See **Tools** below.
+Point it at a different endpoint with `BIONIC_BASE_URL` (default `http://127.0.0.1:1234`).
 
 ## Tools
 
-- **`respond`** — run a prompt on a local model. Pick a model by id, or let `model:"auto"` use whatever's already loaded (avoids an 8-30s cold reload). Supports a system prompt, temperature, and JSON-schema-forced structured output.
-- **`models`** — list the installed models with live load state and a measured capability card (quality, speed, context size), so you can decide what to hand off.
+- **`respond`**: run a prompt. Pick a model by id, or let `model:"auto"` use the loaded one. Takes a system prompt, temperature, and a JSON schema to force structured output.
+- **`models`**: list installed models with live load state and a capability card (quality, speed, context size), so you can decide what to hand off.
 
-The capability card lives in `models.json`. One prompt is fully self-contained: the local model can't see your session, so inline every input and instruction.
+One rule that matters: each prompt has to stand on its own. The local model can't see your Claude session, files, or memory, so inline every input and instruction it needs.
 
 ## Two servers in here
 
-- **`index.js`** (`bionic`) — the straight LM Studio server. Start here.
-- **`local.js`** (`local`) — an optional tiered version: it tries a faster on-device backend first (caix / Apple Core AI on the Neural Engine) and falls back to LM Studio automatically when that's down. Register it separately if you want the routed surface:
+- **`index.js`** (`bionic`): the straight LM Studio bridge. Start here.
+- **`local.js`** (`local`): an optional tiered version. It tries a faster on-device backend first (caix, Apple Core AI on the Neural Engine) and falls back to LM Studio when that's down. Register it separately if you want it:
   ```sh
-  claude mcp add -s user local -- node /path/to/bionic-mcp/local.js
+  claude mcp add -s user local -- node "$(pwd)/local.js"
   ```
 
 ## Requirements
 
-Node 18+ (uses built-in `fetch`) and LM Studio with its server running. On a 16GB machine only one chat model stays resident at a time, so switching models costs a cold load; `model:"auto"` is there to avoid paying that when you don't need to.
-
-## License
-
-MIT, see [LICENSE](LICENSE).
+Node 18+ (for built-in `fetch`) and LM Studio with its server running. The capability card lives in `models.json`, edit it to match your own installed models.
