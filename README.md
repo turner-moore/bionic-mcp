@@ -8,19 +8,46 @@
 - **Private** — the prompt and the answer stay on your Mac.
 - **Typed and safe** — the server refuses unknown model ids instead of letting LM Studio silently swap in whatever happens to be loaded.
 
-## Quick start
+## Install
 
-1. Start LM Studio's server (it listens on `:1234`):
-   ```sh
-   ~/.lmstudio/bin/lms server start
-   ```
-2. Register the MCP:
-   ```sh
-   claude mcp add -s user bionic -- node /path/to/bionic-mcp/index.js
-   ```
-3. Call it. `respond` runs a prompt; `models` shows what's installed and loaded.
+```sh
+git clone https://github.com/turner-moore/bionic-mcp.git
+cd bionic-mcp
+npm install
+```
 
-Point it somewhere else with `BIONIC_BASE_URL` (default `http://127.0.0.1:1234`).
+You also need [LM Studio](https://lmstudio.ai) with its local server running on `:1234`:
+
+```sh
+~/.lmstudio/bin/lms server start
+```
+
+### Register with Claude Code
+
+```sh
+claude mcp add -s user bionic -- node "$(pwd)/index.js"
+```
+
+### Register with any other MCP client
+
+Add this to your client's config (e.g. `claude_desktop_config.json`), using an absolute path:
+
+```json
+{
+  "mcpServers": {
+    "bionic": {
+      "command": "node",
+      "args": ["/absolute/path/to/bionic-mcp/index.js"]
+    }
+  }
+}
+```
+
+Point it at a different endpoint with the `BIONIC_BASE_URL` env var (default `http://127.0.0.1:1234`).
+
+## Use
+
+`respond` runs a prompt; `models` lists what's installed and loaded. See **Tools** below.
 
 ## Tools
 
